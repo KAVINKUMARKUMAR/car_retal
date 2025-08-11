@@ -1,28 +1,31 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import axios from 'axios';
 
 function Register() {
-  const [formData, setFormData] = useState({username: '', email: '', password: ''});
-  const [message, setMessage] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [msg, setMsg] = useState('');
 
-  const handleChange = (e) => {
-    setFormData({...formData, [e.target.name]: e.target.value});
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    axios.post('http://localhost:8000/api/register/', formData)
-      .then(res => setMessage(res.data.message))
-      .catch(err => setMessage('Error: ' + JSON.stringify(err.response.data)));
+    try {
+      const res = await axios.post('http://localhost:8000/api/register/', {
+        username,
+        password
+      });
+      setMsg(res.data.message);
+    } catch (err) {
+      setMsg('Error: ' + (err.response?.data?.username || err.response?.data?.password || 'Registration failed'));
+    }
   };
 
   return (
     <form onSubmit={handleSubmit}>
-      <input name="username" placeholder="Username" onChange={handleChange} required />
-      <input name="email" placeholder="Email" type="email" onChange={handleChange} required />
-      <input name="password" placeholder="Password" type="password" onChange={handleChange} required />
+      <h2>Register</h2>
+      <input placeholder="Username" value={username} onChange={e => setUsername(e.target.value)} required />
+      <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} required />
       <button type="submit">Register</button>
-      <p>{message}</p>
+      <div>{msg}</div>
     </form>
   );
 }

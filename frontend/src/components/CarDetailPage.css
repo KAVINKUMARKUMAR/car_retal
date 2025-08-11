@@ -1,0 +1,18 @@
+.thumbnail-scroll {
+  overflow-x: hidden; /* Default: No scroll */
+  transition: overflow 0.3s ease;
+}
+
+.thumbnail-scroll:hover {
+  overflow-x: auto; /* Scroll appears only on hover */
+}
+
+/* Hide scrollbar - WebKit browsers */
+.thumbnail-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar - Firefox */
+.thumbnail-scroll {
+  scrollbar-width: none;
+}
