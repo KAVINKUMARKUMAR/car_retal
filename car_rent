@@ -1,0 +1,219 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import PropTypes from 'prop-types';
+import AOS from 'aos';
+import 'aos/dist/aos.css';
+import Lightbox from 'react-image-lightbox';
+import 'react-image-lightbox/style.css';
+import styles from './PlaceGallery.module.css';
+
+// Single Image Card with animation and click handlers
+const GalleryImage = ({ place, imgUrl, imgIdx, onClick, aosEffect }) => (
+  <div
+    className={styles.imageCard}
+    data-aos={aosEffect}
+    data-aos-offset="200"
+    data-aos-duration="800"
+    data-aos-once="true"
+    onClick={() => onClick(imgIdx)}
+    role="button"
+    tabIndex={0}
+    onKeyDown={(e) => e.key === 'Enter' && onClick(imgIdx)}
+  >
+    <div className={styles.imageWrapper}>
+      <img
+        src={imgUrl}
+        alt={`${place.name} - Image ${imgIdx + 1}`}
+        className={styles.image}
+        loading="lazy"
+      />
+      {/* Centered text over image */}
+      <div className={styles.overlayText}>
+        <h3>{place.name}</h3>
+        <p>{place.description}</p>
+      </div>
+    </div>
+  </div>
+);
+
+GalleryImage.propTypes = {
+  place: PropTypes.object.isRequired,
+  imgUrl: PropTypes.string.isRequired,
+  imgIdx: PropTypes.number.isRequired,
+  onClick: PropTypes.func.isRequired,
+  aosEffect: PropTypes.string.isRequired,
+};
+
+export default function PlaceGallery({ places }) {
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [currentPlaceIdx, setCurrentPlaceIdx] = useState(0);
+  const [currentImageIdx, setCurrentImageIdx] = useState(0);
+
+  useEffect(() => {
+    AOS.init({
+      duration: 800,
+      once: true,
+      easing: 'ease-in-out',
+    });
+  }, []);
+
+  const openLightbox = useCallback((placeIdx, imgIdx) => {
+    setCurrentPlaceIdx(placeIdx);
+    setCurrentImageIdx(imgIdx);
+    setLightboxOpen(true);
+  }, []);
+
+  const closeLightbox = () => setLightboxOpen(false);
+
+  const moveNext = () => {
+    const images = places[currentPlaceIdx].images;
+    setCurrentImageIdx((currentImageIdx + 1) % images.length);
+  };
+
+  const movePrev = () => {
+    const images = places[currentPlaceIdx].images;
+    setCurrentImageIdx(
+      (currentImageIdx + images.length - 1) % images.length
+    );
+  };
+
+  return (
+    <div className={styles.galleryContainer}>
+      {places.map((place, placeIdx) =>
+        place.images.map((imgUrl, imgIdx) => (
+          <GalleryImage
+            key={`${placeIdx}-${imgIdx}`}
+            place={place}
+            imgUrl={imgUrl}
+            imgIdx={imgIdx}
+            onClick={(idx) => openLightbox(placeIdx, idx)}
+            aosEffect={imgIdx % 2 === 0 ? 'fade-right' : 'fade-left'}
+          />
+        ))
+      )}
+
+      {lightboxOpen && (
+        <Lightbox
+          mainSrc={places[currentPlaceIdx].images[currentImageIdx]}
+          nextSrc={
+            places[currentPlaceIdx].images[
+              (currentImageIdx + 1) % places[currentPlaceIdx].images.length
+            ]
+          }
+          prevSrc={
+            places[currentPlaceIdx].images[
+              (currentImageIdx +
+                places[currentPlaceIdx].images.length -
+                1) % places[currentPlaceIdx].images.length
+            ]
+          }
+          onCloseRequest={closeLightbox}
+          onMovePrevRequest={movePrev}
+          onMoveNextRequest={moveNext}
+          imageTitle={`${places[currentPlaceIdx].name} (${
+            currentImageIdx + 1
+          } / ${places[currentPlaceIdx].images.length})`}
+          imageCaption={places[currentPlaceIdx].description}
+          enableZoom={true}
+          animationOnKeyInput={true}
+          reactModalStyle={{ overlay: { zIndex: 1040 } }}
+          discourageDownloads={true}
+        />
+      )}
+    </div>
+  );
+}
+
+PlaceGallery.propTypes = {
+  places: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      description: PropTypes.string.isRequired,
+      images: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
+    })
+  ).isRequired,
+};
+
+
+
+
+.galleryContainer {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Each image & text card */
+.imageCard {
+  width: 100vw;
+  height: 50vh;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Image wrapper keeps text over it */
+.imageWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* The image itself */
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border: none;
+  display: block;
+}
+
+/* Overlayed text centered */
+.overlayText {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  text-shadow: 0 4px 10px rgba(0, 0, 0, 0.7);
+}
+
+.overlayText h3 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.overlayText p {
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  max-width: 80%;
+}
+
+.galleryContainer {
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-family: 'Poppins', sans-serif; /* 👈 New font here */
+}
+
+.overlayText h3 {
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 800; /* heavier weight for titles */
+}
+
+.overlayText p {
+  font-family: 'Poppins', sans-serif;
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 400;
+}
+
+
+
+
